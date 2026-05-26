@@ -1,0 +1,40 @@
+name: research-assistant
+description: Decompose a topic, research sub-questions, synthesize findings
+provider: mimo
+model: MiMo-7B-RL
+
+variables:
+  topic: "Advantages of small reasoning models like MiMo-7B for on-device AI"
+
+steps:
+  - id: decompose
+    prompt: |
+      Break this research topic into 3-5 specific sub-questions
+      that together cover the topic comprehensively.
+
+      Topic: {{ topic }}
+    output_key: sub_questions
+
+  - id: research
+    prompt: |
+      Research each sub-question below. For each, provide:
+      - Key findings (2-3 bullet points)
+      - Relevant data or examples
+      - Confidence level (high/medium/low)
+
+      Sub-questions:
+      {{ sub_questions }}
+    output_key: findings
+    depends_on: [decompose]
+
+  - id: synthesize
+    prompt: |
+      Synthesize these research findings into a structured report
+      with: Executive Summary, Key Takeaways, and Open Questions.
+
+      Topic: {{ topic }}
+
+      Findings:
+      {{ findings }}
+    output_key: report
+    depends_on: [research]

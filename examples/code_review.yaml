@@ -1,0 +1,55 @@
+name: code-review
+description: Automated code analysis, review, and fix suggestions
+provider: mimo
+model: MiMo-7B-RL
+
+variables:
+  code: |
+    def process(data):
+        import os
+        results = []
+        for item in data:
+            if item.get('active'):
+                if item.get('score') > 50:
+                    if item.get('verified'):
+                        results.append(transform(item))
+        return results
+
+    async def fetch_data():
+        client = httpx.AsyncClient()
+        resp = await client.get("https://api.example.com/data")
+        return resp.json()
+
+steps:
+  - id: analyze
+    prompt: |
+      Analyze the following Python code for bugs, code smells,
+      and potential improvements. List each issue with severity.
+
+      Code:
+      {{ code }}
+    output_key: analysis
+
+  - id: review
+    prompt: |
+      You are a senior code reviewer. Given this analysis,
+      rate overall severity (low/medium/high/critical) and
+      prioritize which issues to fix first.
+
+      Analysis:
+      {{ analysis }}
+    output_key: review
+    depends_on: [analyze]
+
+  - id: suggest
+    prompt: |
+      Based on this code review, write concrete code fixes.
+      Provide before/after snippets for each fix.
+
+      Review:
+      {{ review }}
+
+      Original Code:
+      {{ code }}
+    output_key: suggestions
+    depends_on: [review]
